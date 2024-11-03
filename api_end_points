@@ -1,0 +1,15 @@
+path("admin/", admin.site.urls),
+    path('api/user/', include('UserAdmin.urls')),
+    path("api/file/", include("FileAdmin.urls")),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+
+       path('register', create_user_profile, name='create_user_profile'),
+    path('all-users', get_all_user_profiles, name='get_all_user_profiles'),
+    path('secure', secure_view, name='secure_view'),
+]
+
+urlpatterns = [
+    path('upload', fileUploadUpdateData, name="File_upload_update_data"),
+]
