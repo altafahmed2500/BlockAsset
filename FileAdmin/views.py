@@ -44,10 +44,10 @@ def updateMetadata(request):
 
         # Call updateMetaData with the retrieved file path and public address
         file_path_full = f"./media/{file_path}"
-        updateMetaData(file_path_full, file_path_full, public_address)
+        new_hash_value = updateMetaData(file_path_full, file_path_full, public_address)
 
         # Update the metadata or hash in the database (if needed)
-        new_hash_value = generate_file_hash(file_path_full, hash_algorithm='sha256')
+        # new_hash_value = generate_file_hash(file_path_full, hash_algorithm='sha256')
         # Replace with actual logic for new hash
         file_data.file_hash_updated = new_hash_value
         file_data.save()

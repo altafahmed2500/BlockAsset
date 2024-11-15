@@ -53,4 +53,5 @@ def updateMetaData(input_pdf, output_pdf, public_address):
     # Call the function with input and output files and custom metadata
     addCustomMetadataToPdf(input_pdf, output_pdf, custom_metadata)
     updated_hash = generate_file_hash(output_pdf, hash_algorithm='sha256')
-    print(updated_hash)
+    return updated_hash
+    # print(updated_hash)
