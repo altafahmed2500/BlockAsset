@@ -1,6 +1,10 @@
+import datetime
 import hashlib
-import time
+from datetime import datetime
+import json
 import PyPDF2
+
+
 def generate_file_hash(file_path, hash_algorithm='sha256'):
     # Create a hash object based on the specified algorithm
     hash_func = getattr(hashlib, hash_algorithm)()
@@ -17,9 +21,8 @@ def generate_file_hash(file_path, hash_algorithm='sha256'):
         return None
 
 
-
 # Function to add custom metadata to a PDF file
-def addCustomMetadataToPdf(input_pdf, output_pdf, metadata, public_address):
+def addCustomMetadataToPdf(input_pdf, output_pdf, metadata):
     # Open the existing PDF
     with open(input_pdf, 'rb') as file:
         pdf_reader = PyPDF2.PdfReader(file)
@@ -38,14 +41,16 @@ def addCustomMetadataToPdf(input_pdf, output_pdf, metadata, public_address):
 
     print(f"Custom metadata added to {output_pdf}")
 
-def updateMetaData(input_pdf,output_pdf, metadata, public_address,file_path):
 
+def updateMetaData(input_pdf, output_pdf, public_address):
     public_address = public_address
-    document_owner = "Altaf Ahmed"
-    update_metadata = {
-        "/document_owner": document_owner,
-        "/public_address": public_address,
-        "/timestamp": str(time.time()),
+    # Define custom metadata with current timestamp
+    custom_metadata = {
+        "/public_address": "sample_address",
+        "/timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
-    addCustomMetadataToPdf(input_pdf, output_pdf, metadata, public_address)
-    generate_file_hash(file_path, hash_algorithm='sha256')
+
+    # Call the function with input and output files and custom metadata
+    addCustomMetadataToPdf(input_pdf, output_pdf, custom_metadata)
+    updated_hash = generate_file_hash(output_pdf, hash_algorithm='sha256')
+    print(updated_hash)

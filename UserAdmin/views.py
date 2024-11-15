@@ -7,6 +7,7 @@ from .models import UserProfile
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from .permisssion import IsAdminUser
 
 
 @api_view(['GET'])
@@ -24,6 +25,7 @@ def create_user_profile(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@permission_classes([IsAdminUser])
 @api_view(['GET'])
 def get_all_user_profiles(request):
     # Retrieve all user profiles from the database
