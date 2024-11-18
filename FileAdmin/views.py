@@ -7,6 +7,7 @@ from .models import FileData
 from .serializers import FileDataSerializer
 from AccountAdmin.models import AccountProfile
 from .updateMetaData import updateMetaData, generate_file_hash
+from .IPFSConnect import add_to_ipfs
 
 
 @api_view(['GET'])
@@ -89,3 +90,34 @@ def fileUploadUpdateData(request):
             return Response(response_data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def uploadFileIPFS(request):
+    try:
+        # Get the public address from the AccountProfile of the current user
+        account = AccountProfile.objects.get(user=request.user)
+        public_address = account.public_address
+        file_data = FileData.objects.filter(user_address=public_address).first()
+
+        if not file_data:
+            return Response({"message": "No file data found for this user."}, status=status.HTTP_404_NOT_FOUND)
+
+        file_id = file_data.file_id
+        file_path = file_data.file_path
+        file_path_full = f"./media/{file_path}"
+
+        ipfs_json = add_to_ipfs(file_path_full)
+        ipfs_hash = ipfs_json["Hash"]
+        file_data.ipfs_hash = ipfs_hash
+        file_data.save()
+
+        return Response(
+            {"message": f"The file with ID{file_id} is uploaded to IPFS Distributed network and the details: {ipfs_json}"},
+            status=status.HTTP_200_OK
+        )
+    except AccountProfile.DoesNotExist:
+        return Response({"message": "Account not found for the user."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

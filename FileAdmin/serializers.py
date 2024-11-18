@@ -9,8 +9,10 @@ from .updateMetaData import addCustomMetadataToPdf
 class FileDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = FileData
-        fields = ['file_id', 'file_path', 'file_hash', 'file_metadata', 'created_at', 'updated_at', 'user_address']
-        read_only_fields = ['file_id', 'file_hash', 'file_metadata', 'created_at', 'updated_at', 'user_address']
+        fields = ['file_id', 'file_path', 'file_hash', 'file_metadata', 'ipfs_hash', 'created_at', 'updated_at',
+                  'user_address']
+        read_only_fields = ['file_id', 'file_hash', 'file_metadata', 'created_at', 'updated_at',
+                            'user_address']
 
     def __init__(self, *args, request=None, **kwargs):
         super(FileDataSerializer, self).__init__(*args, **kwargs)
@@ -100,4 +102,3 @@ class FileDataSerializer(serializers.ModelSerializer):
     #
     #     instance.save()
     #     return instance
-

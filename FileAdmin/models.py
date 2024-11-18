@@ -20,6 +20,10 @@ class FileData(models.Model):
         max_length=64,
         null=True
     )
+    ipfs_hash = models.CharField(
+        max_length=64,
+        null=True
+    )
     file_metadata = models.JSONField()
 
     user_address = models.CharField(
