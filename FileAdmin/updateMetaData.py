@@ -43,10 +43,9 @@ def addCustomMetadataToPdf(input_pdf, output_pdf, metadata):
 
 
 def updateMetaData(input_pdf, output_pdf, public_address):
-    public_address = public_address
     # Define custom metadata with current timestamp
     custom_metadata = {
-        "/public_address": "sample_address",
+        "/public_address": public_address,
         "/timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
