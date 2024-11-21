@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "FileAdmin",
     "UserAdmin",
     "AssetAdmin",
+    "Web3Backend",
     "Dashboard"
 ]
 
