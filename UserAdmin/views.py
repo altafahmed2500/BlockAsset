@@ -2,12 +2,15 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+    
 from .serializers import UserProfileSerializer
 from .models import UserProfile
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .permisssion import IsAdminUser
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 @api_view(['GET'])
@@ -45,17 +48,20 @@ def secure_view(request):
 @api_view(['POST'])
 def login_view(request):
     if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.data.get('username')
+        password = request.data.get('password')
+
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            return redirect('home')  # redirect to a success page
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+            }, status=HTTP_200_OK)
         else:
-            messages.error(request, "Invalid username or password.")
-
-    return render(request, "login.html")
+            return Response({"error": "Invalid username or password."}, status=HTTP_400_BAD_REQUEST)
 
 
 def logout_view(request):

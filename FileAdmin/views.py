@@ -25,7 +25,7 @@ def getUserUploadFiles(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 def updateMetadata(request):
     try:
         # Get the public address from the AccountProfile of the current user
@@ -92,7 +92,7 @@ def fileUploadUpdateData(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 def uploadFileIPFS(request):
     try:
         # Get the public address from the AccountProfile of the current user
@@ -113,11 +113,11 @@ def uploadFileIPFS(request):
         file_data.save()
 
         return Response(
-            {"message": f"The file with ID{file_id} is uploaded to IPFS Distributed network and the details: {ipfs_json}"},
+            {
+                "message": f"The file with ID{file_id} is uploaded to IPFS Distributed network and the details: {ipfs_json}"},
             status=status.HTTP_200_OK
         )
     except AccountProfile.DoesNotExist:
         return Response({"message": "Account not found for the user."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"message": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-

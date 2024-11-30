@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import test_contract
+from .views import test_contract, admin_ether_push, admin_ether_balance
 
 urlpatterns = [
     path('testContract', test_contract, name='test_contract'),
+    path('pushEther', admin_ether_push, name='admin_ether_push'),
+    path('accountBalance', admin_ether_balance, name='admin_ether_balance')
 ]

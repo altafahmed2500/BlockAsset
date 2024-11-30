@@ -17,6 +17,18 @@ class AssetData(models.Model):
         on_delete=models.CASCADE,
         related_name='assets'
     )  # Many-to-one: One user can own many assets
+    ipfs_hash = models.CharField(
+        max_length=64,
+        null=True
+    )
+    transaction_id = models.CharField(
+        max_length=64,
+        null=True
+    )
+    token_id = models.CharField(
+        max_length=64,
+        null=True
+    )
     file_id = models.ForeignKey(
         'FileAdmin.FileData',
         on_delete=models.CASCADE,
