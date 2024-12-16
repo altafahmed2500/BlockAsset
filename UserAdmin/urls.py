@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import create_user_profile,get_all_user_profiles,secure_view,login_view,logout_view
-
+from .views import create_user_profile, secure_view, login_view, logout_view, \
+    get_all_user_profiles
 
 urlpatterns = [
     path('register', create_user_profile, name='create_user_profile'),

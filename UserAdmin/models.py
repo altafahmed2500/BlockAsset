@@ -16,3 +16,17 @@ class UserProfile(models.Model):
     date_of_birth = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class UserConnection(models.Model):
+    follower = models.ForeignKey(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name='following'
+    )
+    following = models.ForeignKey(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name='followers'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)

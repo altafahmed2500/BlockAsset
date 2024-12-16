@@ -2,6 +2,15 @@ from rest_framework import serializers
 from .models import AccountProfile
 
 
+class UserNamePublicKeySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='user.username')  # Fetch the username from the related User model
+    public_key = serializers.CharField(source='public_address')  # Map public_address to public_key
+
+    class Meta:
+        model = AccountProfile
+        fields = ['name', 'public_key']
+
+
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccountProfile

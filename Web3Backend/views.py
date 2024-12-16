@@ -1,11 +1,73 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .contract_compile import contract_compilation
-from .connection_web3 import ganache_connection_string
+from .connection_web3 import hardhat_connection_string
 from .contract_deploy import deploy_contract
 from UserAdmin.permisssion import IsAdminUser
 from .ether_injection import send_ether_to_one
 from .ether_balance import check_account_balance
+from AccountAdmin.models import AccountProfile
+
+web3 = hardhat_connection_string()
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_ether_push_allusers(request):
+    try:
+        # Establish connection to Hardhat blockchain
+        web3 = hardhat_connection_string()
+
+        # Get sender's private key from request
+        sender_private_key = request.data.get("sender_private_key")
+        if not sender_private_key:
+            return Response({"error": "Sender private key is required."}, status=400)
+
+        # Get the first account from Hardhat as the sender address
+        accounts = web3.eth.accounts
+        if not accounts:
+            return Response({"error": "No accounts available in Hardhat."}, status=500)
+        sender_address = accounts[0]
+
+        # Convert to Wei (10 Ether)
+        amount_in_wei = web3.to_wei(10, 'ether')
+
+        # Fetch all accounts in AccountProfile
+        account_profiles = AccountProfile.objects.all()
+        if not account_profiles.exists():
+            return Response({"error": "No accounts found in AccountProfile."}, status=404)
+
+        transaction_hashes = []
+
+        for account in account_profiles:
+            receiver_address = account.public_address
+            if not receiver_address:
+                continue
+
+            # Build the transaction
+            transaction = {
+                'from': sender_address,
+                'to': receiver_address,
+                'value': amount_in_wei,
+                'gas': 21000,
+                'gasPrice': web3.to_wei('20', 'gwei'),
+                'nonce': web3.eth.get_transaction_count(sender_address),
+            }
+
+            # Sign the transaction with the private key from the request
+            signed_tx = web3.eth.account.sign_transaction(transaction, sender_private_key)
+
+            # Send the transaction
+            tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            transaction_hashes.append(web3.to_hex(tx_hash))
+
+        return Response({
+            "message": "Ether sent successfully to all accounts.",
+            "transaction_hashes": transaction_hashes
+        }, status=200)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 
 @api_view(['POST'])

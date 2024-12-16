@@ -1,9 +1,9 @@
 # Function to check account balance
-from .connection_web3 import ganache_connection_string
+from .connection_web3 import hardhat_connection_string
 
 
 def check_account_balance(account_address):
-    web3 = ganache_connection_string()
+    web3 = hardhat_connection_string()
     try:
         # Validate address
         if not web3.is_address(account_address):

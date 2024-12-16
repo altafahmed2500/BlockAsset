@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
-    
+
 from .serializers import UserProfileSerializer
 from .models import UserProfile
 from django.shortcuts import render, redirect

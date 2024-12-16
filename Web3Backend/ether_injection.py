@@ -1,9 +1,10 @@
 from web3 import Web3
-from .connection_web3 import ganache_connection_string
+from .connection_web3 import hardhat_connection_string
 
 
 def send_ether_to_one(sender_address, sender_private_key, receiver_address, amount_in_ether):
-    web3 = ganache_connection_string()
+    # Connect to Hardhat
+    web3 = hardhat_connection_string()
 
     # Convert Ether to Wei
     amount_in_wei = web3.to_wei(amount_in_ether, 'ether')
@@ -18,7 +19,7 @@ def send_ether_to_one(sender_address, sender_private_key, receiver_address, amou
         'gas': 21000,  # Standard gas limit for Ether transfer
         'gasPrice': web3.to_wei('20', 'gwei'),
         'nonce': nonce,
-        'chainId': 1337  # Replace with your chain ID (e.g., 1 for mainnet, 1337 for Ganache)
+        'chainId': 31337  # Hardhat's default chain ID
     }
 
     # Sign the transaction
@@ -26,4 +27,5 @@ def send_ether_to_one(sender_address, sender_private_key, receiver_address, amou
 
     # Send the transaction
     tx_hash = web3.eth.send_raw_transaction(signed_txn.raw_transaction)
-    return tx_hash
+
+    return tx_hash.hex()  # Return the transaction hash as a hex string
