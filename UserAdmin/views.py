@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from .serializers import UserProfileSerializer
-from .models import UserProfile
+from .models import UserProfile, Incident
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -67,3 +67,37 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+def create_incident(request):
+    """
+    API endpoint to create a new incident for the authenticated user.
+    """
+    user = request.user
+    incident_name = request.data.get('incident_name')
+    incident_description = request.data.get('incident_description', '')
+
+    if not incident_name:
+        return Response({"error": "Incident name is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Create a new incident for the authenticated user
+        incident = Incident.objects.create(
+            user=user,
+            incident_name=incident_name,
+            incident_description=incident_description
+        )
+        return Response({
+            "message": "Incident created successfully.",
+            "incident": {
+                "incident_id": incident.incident_id,
+                "incident_name": incident.incident_name,
+                "incident_description": incident.incident_description,
+                "created_at": incident.created_at,
+                "updated_at": incident.updated_at
+            }
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

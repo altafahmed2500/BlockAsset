@@ -142,29 +142,17 @@ def transfer_token_api(request):
         asset.save()
         print(f"Asset Owner After Update: {asset.asset_owner}")
 
-        # Save the transaction to the TransactionData table
-        transaction = TransactionData.objects.create(
-            from_address=account_id,
-            to_address=to_address,
-            transaction_hash=result["transaction_id"],  # Assuming result includes transaction_id
-            block_number=result["block_number"],  # Assuming result includes block_number
-            created_by=user
-        )
+        # Update the user_address in the FileData model
+        FileData.objects.filter(file_hash=asset.file_id).update(user_address=to_address)
 
-        # Return the transaction and asset details
+        # Return success response
         return JsonResponse({
-            "transaction_id": transaction.transaction_id,
-            "from_address": transaction.from_address,
-            "to_address": transaction.to_address,
-            "transaction_hash": transaction.transaction_hash,
-            "block_number": transaction.block_number,
+            "message": "Asset transferred successfully and FileData updated.",
             "updated_asset": {
                 "asset_id": str(asset.asset_id),
                 "new_owner": asset.asset_owner.username,
                 "token_id": asset.token_id,
-                "block_number": asset.block_number
             },
-            "created_at": transaction.time
         }, status=200)
 
     except Exception as e:

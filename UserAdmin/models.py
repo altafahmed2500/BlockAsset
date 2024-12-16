@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.core.validators import RegexValidator, EmailValidator
 from django.contrib.auth.models import User
@@ -30,3 +32,27 @@ class UserConnection(models.Model):
         related_name='followers'
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Incident(models.Model):
+    incident_id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,  # Generates a unique identifier
+        editable=False
+    )
+    user = models.ForeignKey(
+        User,  # Connects the incident to a user
+        on_delete=models.CASCADE,
+        related_name='incidents'
+    )
+    incident_name = models.CharField(
+        max_length=255,
+        verbose_name="Incident Name"
+    )
+    incident_description = models.TextField(
+        verbose_name="Incident Description",
+        blank=True,
+        null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
