@@ -48,7 +48,7 @@ def updateMetaData(input_pdf, output_pdf, public_address):
         "/public_address": public_address,
         "/timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
-
+    print(custom_metadata)
     # Call the function with input and output files and custom metadata
     addCustomMetadataToPdf(input_pdf, output_pdf, custom_metadata)
     updated_hash = generate_file_hash(output_pdf, hash_algorithm='sha256')

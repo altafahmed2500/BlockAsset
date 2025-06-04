@@ -1,14 +1,120 @@
 from datetime import time
-
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
 from .models import FileData
 from .serializers import FileDataSerializer
 from AccountAdmin.models import AccountProfile
 from .updateMetaData import updateMetaData, generate_file_hash
 from .IPFSConnect import add_to_ipfs
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework import status
+import requests
+from openai.error import OpenAIError
+import openai  # Ensure OpenAI SDK is installed or configure accordingly
+import os
+import pdfplumber
+
+# Define the IPFS Gateway URL
+IPFS_GATEWAY = "https://ipfs.io/ipfs/"  # You can use your own IPFS gateway if needed
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+def summarize_medical_reports(request):
+    """
+    API to fetch medical reports from IPFS, extract meaningful content, summarize them,
+    and suggest improvements.
+    """
+    try:
+        # Get the user's account profile
+        account = AccountProfile.objects.get(user=request.user)
+
+        # Retrieve all FileData associated with the user
+        user_files = FileData.objects.filter(user_address=account.public_address)
+
+        # Initialize results
+        summaries = []
+
+        for file_data in user_files:
+            ipfs_hash = file_data.ipfs_hash  # Assuming FileData has an ipfs_hash field
+            print(ipfs_hash)
+            # Fetch the file content from IPFS
+            try:
+                response = requests.get(f"{IPFS_GATEWAY}{ipfs_hash}", stream=True)
+                if response.status_code != 200:
+                    summaries.append({
+                        "file_hash": ipfs_hash,
+                        "error": f"Failed to retrieve file from IPFS. Status code: {response.status_code}"
+                    })
+                    continue
+
+                # Temporarily save the file
+                temp_file_path = f"/tmp/{ipfs_hash}"
+                with open(temp_file_path, "wb") as temp_file:
+                    temp_file.write(response.content)
+
+                # Extract content based on file type
+                content = ""
+                if temp_file_path.endswith(".pdf"):
+                    with pdfplumber.open(temp_file_path) as pdf:
+                        content = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+                else:
+                    # Handle other formats if needed
+                    content = response.text
+                print(content)
+                if not content.strip():
+                    summaries.append({
+                        "file_hash": ipfs_hash,
+                        "error": "No meaningful content extracted from the file."
+                    })
+                    continue
+
+                # Send content to GPT for summarization
+                try:
+                    gpt_response = openai.ChatCompletion.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user",
+                                   "content": f"Summarize the following medical report and suggest improvements:\n\n{content}"}],
+                    )
+                    gpt_output = gpt_response.choices[0].message.content.strip()
+
+                    # Add summary to results
+                    summaries.append({
+                        "file_hash": ipfs_hash,
+                        "summary_and_improvement": gpt_output,
+                    })
+
+                except OpenAIError as e:
+                    error_message = f"Error communicating with OpenAI API: {e}"
+                    print(error_message)
+                    summaries.append({
+                        "file_hash": ipfs_hash,
+                        "error": f"Unable to generate summary due to API error: {error_message}"
+                    })
+
+                # Clean up temporary file
+                os.remove(temp_file_path)
+
+            except Exception as e:
+                summaries.append({
+                    "file_hash": ipfs_hash,
+                    "error": f"Error processing file: {str(e)}"
+                })
+
+        return Response({
+            "summaries": summaries
+        }, status=status.HTTP_200_OK)
+
+    except AccountProfile.DoesNotExist:
+        return Response(
+            {"message": "Account not found for the authenticated user."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"message": f"An error occurred: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['GET'])

@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .permisssion import IsAdminUser
 from rest_framework_simplejwt.tokens import RefreshToken
+from .verify_location import get_location_from_ip, get_client_ip, ALLOWED_COUNTRIES
 
 
 @api_view(['GET'])
@@ -43,6 +44,34 @@ def get_all_user_profiles(request):
 @api_view(['GET'])
 def secure_view(request):
     return Response({'message': 'You are authenticated!'}, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def Verify_user(request):
+    ip = get_client_ip(request)
+    location_data = get_location_from_ip(ip)
+
+    if not location_data:
+        return Response({"error": "Could not fetch location info"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    country = location_data.get("country")
+    city = location_data.get("city")
+
+    if country in ALLOWED_COUNTRIES:
+        return Response({
+            "status": "verified",
+            "country": country,
+            "city": city,
+            "ip": ip
+        })
+    else:
+        return Response({
+            "status": "denied",
+            "country": country,
+            "city": city,
+            "ip": ip
+        }, status=status.HTTP_403_FORBIDDEN)
 
 
 @api_view(['POST'])

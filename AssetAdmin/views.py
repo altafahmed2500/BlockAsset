@@ -236,6 +236,7 @@ def update_metadata_upload_create_asset(request):
     """
     data = request.data
     file_id = data.get("file_id")
+    print(file_id)
     asset_name = data.get("name")
 
     if not file_id or not asset_name:
@@ -277,6 +278,7 @@ def update_metadata_upload_create_asset(request):
 
         # Create the asset on the blockchain
         result = create_asset(ipfs_hash, asset_name, public_address, private_key)
+        print(result)
         if not result:
             return JsonResponse({"error": "Failed to create asset on the blockchain."}, status=500)
 
@@ -289,6 +291,8 @@ def update_metadata_upload_create_asset(request):
             file_id=file_data,
             name=asset_name
         )
+
+        print(asset_data)
 
         # Save the transaction data to the database
         TransactionData.objects.create(
@@ -364,7 +368,7 @@ def get_user_files_with_assets(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+# @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
 def get_user_asset_count(request):
     """
     API to get the count of assets owned by the authenticated user.

@@ -30,6 +30,7 @@ urlpatterns = [
                   path("api/web3/", include("Web3Backend.urls")),
                   path("api/account/", include("AccountAdmin.urls")),
                   path("api/assets/", include("AssetAdmin.urls")),
+                  path("api/wearable-data", include("AIAdmin.urls")),
                   path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
                   path('api/login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
