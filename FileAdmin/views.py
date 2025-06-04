@@ -118,6 +118,7 @@ def summarize_medical_reports(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])  # PATCH: added authentication requirement
 def getUserUploadFiles(request):
     account = AccountProfile.objects.get(user=request.user)
     user_address = account.public_address
@@ -133,6 +134,7 @@ def getUserUploadFiles(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])  # PATCH: added authentication requirement
 def updateMetadata(request):
     try:
         # Get the public address from the AccountProfile of the current user
@@ -172,6 +174,7 @@ def updateMetadata(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])  # PATCH: added authentication requirement
 def fileUploadUpdateData(request):
     if request.method == 'POST':
         serializer = FileDataSerializer(data=request.data, request=request)
@@ -200,6 +203,7 @@ def fileUploadUpdateData(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])  # PATCH: added authentication requirement
 def uploadFileIPFS(request):
     try:
         # Get the public address from the AccountProfile of the current user
