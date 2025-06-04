@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-6ra37qg9q$8lbhm6+eobcw_iq)0(!$b!wk_8@e_1s9-43ycg7!"
+# The SECRET_KEY must be set as an environment variable DJANGO_SECRET_KEY.
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    raise ImproperlyConfigured("The DJANGO_SECRET_KEY environment variable is not set. Set it to a strong random value.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
