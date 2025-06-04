@@ -29,8 +29,8 @@ def create_user_profile(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@permission_classes([IsAdminUser])
 @api_view(['GET'])
+@permission_classes([IsAdminUser])
 def get_all_user_profiles(request):
     # Retrieve all user profiles from the database
     user_profiles = UserProfile.objects.all()
