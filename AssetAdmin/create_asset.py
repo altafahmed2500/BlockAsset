@@ -1,4 +1,5 @@
 from web3 import Web3
+import os
 
 # Connect to the local Ethereum network
 provider_url = "http://127.0.0.1:8545"  # Hardhat local node
@@ -239,10 +240,17 @@ contract_abi = [
 # Initialize the contract
 contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 
-# Account details
-account = web3.eth.accounts[0]  # Use the first account from Hardhat
-private_key = "2ca0615513da4b51db610d85fd4b46a70d79db6ea935a4375c9e61b0b8b11d75"
-account_id = "0xcCd0E4a2A130fbdeD75681a1dA0393ADf6e258Ef"  # Replace with the account's private key
+# Retrieve private key from environment variable
+private_key = os.environ.get("ETH_PRIVATE_KEY")
+if private_key is None:
+    raise EnvironmentError("Environment variable ETH_PRIVATE_KEY is not set.")
+
+# Retrieve account address from private key
+try:
+    account_obj = web3.eth.account.from_key(private_key)
+    account_id = account_obj.address
+except Exception as e:
+    raise ValueError("Invalid private key provided in ETH_PRIVATE_KEY environment variable.") from e
 
 
 def create_asset(ipfs_hash, asset_name, account_id, private_key):
