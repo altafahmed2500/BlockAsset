@@ -1,9 +1,39 @@
 from web3 import Web3
 from solcx import compile_standard, install_solc, set_solc_version
 
+import hashlib
+import json
+
+# Whitelist of allowed contracts: (sha256 of abi, bytecode) => True
+# To allow new contracts, add their (abi, bytecode) hash here—populate as needed for your project
+VALID_CONTRACTS = {
+    # Example whitelist entry (commented):
+    # ("<sha256_hex_of_abi>", "<sha256_hex_of_bytecode>"): True,
+    # e.g.: ("7bff1e...a", "74234fa...1c"): True,
+}
+
+def _hash_json(obj):
+    """Consistently get sha256 of JSON form of ABI or dict, after canonicalize"""
+    # Ensure canonical encoding for ABI (can be list or dict)
+    data = json.dumps(obj, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    return hashlib.sha256(data).hexdigest()
+
+def _hash_hexstr(hexstr):
+    """Get sha256 of bytecode hex string. Accepts '0x...' or plain hex"""
+    s = hexstr
+    if s.startswith("0x"):
+        s = s[2:]
+    data = bytes.fromhex(s)
+    return hashlib.sha256(data).hexdigest()
 
 def deploy_contract(connection_string, abi, bytecode, owner_private_key):
     try:
+        # Whitelist check
+        abi_hash = _hash_json(abi)
+        bytecode_hash = _hash_hexstr(bytecode)
+        if (abi_hash, bytecode_hash) not in VALID_CONTRACTS:
+            raise PermissionError("Contract not approved for deployment: ABI/bytecode combination not whitelisted.")
+
         # Connect to Ganache
         account = connection_string.eth.account.from_key(owner_private_key)
         print(f"Deploying contract from address: {account.address}")
@@ -44,11 +74,15 @@ def deploy_contract(connection_string, abi, bytecode, owner_private_key):
 
         return txn_receipt.contractAddress
 
+    except PermissionError as pe:
+        print(f"PermissionError: {pe}")
+        return None
     except ValueError as ve:
         if "exceeds gas limit" in str(ve):
             print("Error: Gas limit exceeded. Increase the gas limit.")
         else:
             print(f"ValueError: {ve}")
+        return None
     except Exception as e:
         print(f"Error during deployment: {e}")
         return None
