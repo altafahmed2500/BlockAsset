@@ -11,9 +11,30 @@ from AccountAdmin.models import AccountProfile
 web3 = hardhat_connection_string()
 
 
+def _is_request_secure(request):
+    """
+    Returns True if the request was made securely (over HTTPS).
+    Handles common reverse proxy scenarios.
+    """
+    if request.is_secure():
+        return True
+    # Handle 'X-Forwarded-Proto' for deployments behind reverse proxy
+    x_forwarded_proto = request.META.get('HTTP_X_FORWARDED_PROTO')
+    if x_forwarded_proto:
+        return x_forwarded_proto == 'https'
+    return False
+
+
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def admin_ether_push_allusers(request):
+    # Enforce HTTPS/TLS for sensitive credential submission
+    if not _is_request_secure(request):
+        return Response(
+            {"error": "Insecure transport: This endpoint requires HTTPS/TLS for all requests due to handling sensitive credentials."},
+            status=403
+        )
+
     try:
         # Establish connection to Hardhat blockchain
         web3 = hardhat_connection_string()
@@ -73,6 +94,13 @@ def admin_ether_push_allusers(request):
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def admin_ether_push(request):
+    # Enforce HTTPS/TLS for sensitive credential submission
+    if not _is_request_secure(request):
+        return Response(
+            {"error": "Insecure transport: This endpoint requires HTTPS/TLS for all requests due to handling sensitive credentials."},
+            status=403
+        )
+
     # Extract required fields from request data
     sender_private_key = request.data.get("sender_private_key")
     sender_address = request.data.get("sender_address")
@@ -96,6 +124,7 @@ def admin_ether_push(request):
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def admin_ether_balance(request):
+    # No sensitive input; no HTTPS enforcement needed here
     # Extract required fields from request data
     address = request.data.get("address")
 
