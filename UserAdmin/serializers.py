@@ -4,6 +4,35 @@ from .models import UserProfile
 from eth_account import Account
 from AccountAdmin.models import AccountProfile
 
+import base64
+import hashlib
+import os
+from django.conf import settings
+
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+
+# Helper functions for key derivation and encryption
+def _derive_key(secret, length=32):
+    # Derive a key from the Django SECRET_KEY using SHA-256
+    return hashlib.sha256(secret.encode('utf-8')).digest()[:length]
+
+def aes_encrypt(plaintext, key):
+    # AES-256 CBC with PKCS7 padding
+    iv = os.urandom(16)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    padded = pad(plaintext.encode('utf-8'), AES.block_size)
+    ct = cipher.encrypt(padded)
+    return base64.b64encode(iv + ct).decode('utf-8')
+
+def aes_decrypt(ciphertext, key):
+    data = base64.b64decode(ciphertext)
+    iv = data[:16]
+    ct = data[16:]
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    pt = unpad(cipher.decrypt(ct), AES.block_size)
+    return pt.decode('utf-8')
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,8 +80,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
         eth_account = Account.create()
         public_address = eth_account.address
         private_key = eth_account.key.hex()
-        account_profile = AccountProfile.objects.create(user=user, private_address=private_key,
-                                                        public_address=public_address)
+
+        # Encrypt the private key before storing
+        encryption_key = _derive_key(settings.SECRET_KEY)
+        encrypted_private_key = aes_encrypt(private_key, encryption_key)
+
+        account_profile = AccountProfile.objects.create(
+            user=user,
+            private_address=encrypted_private_key,  # Store ENCRYPTED private key
+            public_address=public_address
+        )
         # Create the UserProfile associated with the newly created user
         user_profile = UserProfile.objects.create(user=user, **validated_data)
         return user_profile
